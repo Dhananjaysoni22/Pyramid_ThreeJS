@@ -1,0 +1,87 @@
+import { useRef, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, useGLTF } from '@react-three/drei';
+import { useControls } from 'leva';
+import gsap from 'gsap';
+
+function Triangle() {
+  const { nodes } = useGLTF('/latestTri.glb');
+  const part1Ref = useRef();
+  const part2Ref = useRef();
+  const part3Ref = useRef();
+
+  // Leva: Position controls with final values
+  const part1Pos = useControls('Part 1 Position', {
+    x: { value: 2.0, min: -10, max: 10, step: 0.1 },
+    y: { value: 4.2, min: -10, max: 10, step: 0.1 },
+    z: { value: -0.1, min: -10, max: 10, step: 0.1 },
+  });
+  const part2Pos = useControls('Part 2 Position', {
+    x: { value: 2.9, min: -10, max: 10, step: 0.1 },
+    y: { value: 4.3, min: -10, max: 10, step: 0.1 },
+    z: { value: 0.6, min: -10, max: 10, step: 0.1 },
+  });
+  const part3Pos = useControls('Part 3 Position', {
+    x: { value: 1.9, min: -10, max: 10, step: 0.1 },
+    y: { value: 4.1, min: -10, max: 10, step: 0.1 },
+    z: { value: -0.5, min: -10, max: 10, step: 0.1 },
+  });
+
+  // Leva: Rotation controls with final values (in radians)
+  const part1Rot = useControls('Part 1 Rotation', {
+    x: { value: 0.00, min: 0, max: Math.PI * 2, step: 0.01 },
+    y: { value: 0.00, min: 0, max: Math.PI * 2, step: 0.01 },
+    z: { value: 0.00, min: 0, max: Math.PI * 2, step: 0.01 },
+  });
+  const part2Rot = useControls('Part 2 Rotation', {
+    x: { value: 0.17, min: 0, max: Math.PI * 2, step: 0.01 },
+    y: { value: 6.28, min: 0, max: Math.PI * 2, step: 0.01 },
+    z: { value: 0.00, min: 0, max: Math.PI * 2, step: 0.01 },
+  });
+  const part3Rot = useControls('Part 3 Rotation', {
+    x: { value: 0.00, min: 0, max: Math.PI * 2, step: 0.01 },
+    y: { value: 4.07, min: 0, max: Math.PI * 2, step: 0.01 },
+    z: { value: 0.00, min: 0, max: Math.PI * 2, step: 0.01 },
+  });
+
+  useEffect(() => {
+    // Animate position
+    gsap.fromTo(part1Ref.current.position, { x: -20 }, { ...part1Pos, duration: 2, delay: 0.2 });
+    gsap.fromTo(part2Ref.current.position, { y: 18 }, { ...part2Pos, duration: 2, delay: 0.4 });
+    gsap.fromTo(part3Ref.current.position, { x: 15 }, { ...part3Pos, duration: 1, delay: 0.2 });
+
+    // Animate rotation
+    gsap.to(part1Ref.current.rotation, { ...part1Rot, duration: 1, delay: 0.2 });
+    gsap.to(part2Ref.current.rotation, { ...part2Rot, duration: 1, delay: 0.4 });
+    gsap.to(part3Ref.current.rotation, { ...part3Rot, duration: 1, delay: 0.6 });
+  }, []);
+
+  // Live update from Leva (rotation and position)
+  useEffect(() => {
+    if (part1Ref.current) {
+      part1Ref.current.position.set(part1Pos.x, part1Pos.y, part1Pos.z);
+      part1Ref.current.rotation.set(part1Rot.x, part1Rot.y, part1Rot.z);
+    }
+    if (part2Ref.current) {
+      part2Ref.current.position.set(part2Pos.x, part2Pos.y, part2Pos.z);
+      part2Ref.current.rotation.set(part2Rot.x, part2Rot.y, part2Rot.z);
+    }
+    if (part3Ref.current) {
+      part3Ref.current.position.set(part3Pos.x, part3Pos.y, part3Pos.z);
+      part3Ref.current.rotation.set(part3Rot.x, part3Rot.y, part3Rot.z);
+    }
+  }, [part1Pos, part2Pos, part3Pos, part1Rot, part2Rot, part3Rot]);
+
+  return (
+    <>
+      <OrbitControls />
+      <group scale={3}>
+        <primitive object={nodes.Plane} ref={part1Ref} />
+        <primitive object={nodes.Plane1} ref={part2Ref} />
+        <primitive object={nodes.Plane2} ref={part3Ref} />
+      </group>
+    </>
+  );
+}
+
+export default Triangle;
