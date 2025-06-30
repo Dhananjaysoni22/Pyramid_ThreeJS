@@ -25,7 +25,7 @@ function App() {
         <PyramidFinal/>
         {/* <CameraTracker/> */}
         <Background/>
-              <Leva hidden={true} /> {/* Set to false to show */}
+              {/* <Leva hidden={true} /> Set to false to show */}
 
       </Canvas>
     </div>
