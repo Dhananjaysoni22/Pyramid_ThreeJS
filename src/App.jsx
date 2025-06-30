@@ -4,6 +4,8 @@ import Pyramid from "./Pyramid.jsx";
 import Background from "./background.jsx";
 import Triangle from "./Triangle.jsx";
 import CameraTracker from "./CameraTracker.jsx";
+import PyramidFinal from "./PyramidFinal.jsx";
+import { Leva } from "leva";
 
 function App() {
   return (
@@ -17,11 +19,14 @@ function App() {
         overflow: "hidden",
       }}
     >
-      <Canvas camera={{ position: [92.9884, 16.3418, 107.8031], fov: 45 }}>
+      <Canvas camera={{ position: [102.7661, 24.7664, 107.6092], fov: 45 }}>
         {/* <Triangle/> */}
-        <Pyramid />
+        {/* <Pyramid /> */}
+        <PyramidFinal/>
         {/* <CameraTracker/> */}
         <Background/>
+              <Leva hidden={true} /> {/* Set to false to show */}
+
       </Canvas>
     </div>
   );
