@@ -1,12 +1,9 @@
 import { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Text } from '@react-three/drei';
-import { useControls } from 'leva';
 import gsap from 'gsap';
 import * as THREE from 'three';
-import ImagePlane from './ImagePlane';
 
-function FloatingPart({ nodes, partName, position, animationComplete, initialPosition }) {
+function FloatingPart({ nodes, partName, position, scale = [1, 1, 1], animationComplete, initialPosition }) {
   const partRef = useRef();
   const meshDataRef = useRef([]);
   const isInitialized = useRef(false);
@@ -57,6 +54,10 @@ function FloatingPart({ nodes, partName, position, animationComplete, initialPos
       
       const extractMeshes = (object) => {
         if (object.isMesh) {
+          // Get world position for distance calculations
+          const worldPosition = new THREE.Vector3();
+          object.getWorldPosition(worldPosition);
+          
           // Store mesh reference and original transform data
           const meshInfo = {
             mesh: object,
@@ -69,7 +70,8 @@ function FloatingPart({ nodes, partName, position, animationComplete, initialPos
               x: object.rotation.x,
               y: object.rotation.y,
               z: object.rotation.z
-            }
+            },
+            worldPosition: worldPosition.clone()
           };
           
           meshData.push(meshInfo);
@@ -87,27 +89,82 @@ function FloatingPart({ nodes, partName, position, animationComplete, initialPos
     }
   };
 
-  // Handle individual mesh hover
+  // Find nearby meshes based on distance
+  const findNearbyMeshes = (targetMesh, maxDistance = 2.0, maxCount = 3) => {
+    const targetInfo = meshDataRef.current.find(info => info.mesh === targetMesh);
+    if (!targetInfo) return [];
+
+    const nearbyMeshes = meshDataRef.current
+      .filter(info => info.mesh !== targetMesh) // Exclude the target mesh itself
+      .map(info => {
+        const distance = targetInfo.worldPosition.distanceTo(info.worldPosition);
+        return { ...info, distance };
+      })
+      .filter(info => info.distance <= maxDistance) // Only meshes within range
+      .sort((a, b) => a.distance - b.distance) // Sort by distance
+      .slice(0, maxCount); // Take only the closest ones
+
+    return nearbyMeshes;
+  };
+
+  // Handle individual mesh hover with ripple effect
   const handleMeshHover = (meshInfo, isHovered) => {
     if (!isInitialized.current || hasInitialAnimation) return;
 
-    const { mesh, originalPosition, originalRotation } = meshInfo;
-    
+    const { mesh } = meshInfo;
     console.log(`${partName} - Mesh ${mesh.name || 'unnamed'} hover: ${isHovered}`);
+
+    if (isHovered) {
+      // Find nearby meshes for ripple effect
+      const nearbyMeshes = findNearbyMeshes(mesh);
+      console.log(`Found ${nearbyMeshes.length} nearby meshes for ripple effect`);
+
+      // Animate the main hovered mesh
+      animateMeshFloat(meshInfo, true, 1.0); // Full intensity
+
+      // Animate nearby meshes with reduced intensity
+      nearbyMeshes.forEach((nearbyInfo, index) => {
+        const intensity = Math.max(0.3, 1.0 - (nearbyInfo.distance / 2.0)); // Intensity based on distance
+        const delay = index * 0.05; // Small stagger delay
+        setTimeout(() => {
+          animateMeshFloat(nearbyInfo, true, intensity);
+        }, delay * 1000);
+      });
+
+    } else {
+      // Find nearby meshes that were affected
+      const nearbyMeshes = findNearbyMeshes(mesh);
+
+      // Return main mesh to original position
+      animateMeshFloat(meshInfo, false, 1.0);
+
+      // Return nearby meshes to original positions
+      nearbyMeshes.forEach((nearbyInfo, index) => {
+        const delay = index * 0.03; // Small stagger delay for return
+        setTimeout(() => {
+          animateMeshFloat(nearbyInfo, false, 1.0);
+        }, delay * 1000);
+      });
+    }
+  };
+
+  // Animate individual mesh floating
+  const animateMeshFloat = (meshInfo, isFloating, intensity = 1.0) => {
+    const { mesh, originalPosition, originalRotation } = meshInfo;
 
     // Kill any existing animations on this mesh
     gsap.killTweensOf([mesh.position, mesh.rotation]);
     
-    if (isHovered) {
-      // Create floating effect for this specific mesh
-      const floatDistance = 0.15;
+    if (isFloating) {
+      // Create floating effect with intensity scaling
+      const floatDistance = 0.5 * intensity;
       const direction = {
         x: (Math.random() - 0.5) * floatDistance,
-        y: Math.random() * floatDistance * 0.5 + 0.05,
+        y: Math.random() * floatDistance * 0.5 + (0.05 * intensity),
         z: (Math.random() - 0.5) * floatDistance
       };
       
-      const rotationAmount = 0.3;
+      const rotationAmount = 0.3 * intensity;
       const rotationOffset = {
         x: (Math.random() - 0.5) * rotationAmount,
         y: (Math.random() - 0.5) * rotationAmount,
@@ -207,6 +264,13 @@ function FloatingPart({ nodes, partName, position, animationComplete, initialPos
       partRef.current.position.set(position.x, position.y, position.z);
     }
   }, [position.x, position.y, position.z, animationComplete]);
+
+  // NEW: Scale updates from Leva controls
+  useEffect(() => {
+    if (partRef.current) {
+      partRef.current.scale.set(scale[0], scale[1], scale[2]);
+    }
+  }, [scale[0], scale[1], scale[2]]);
 
   // Custom raycaster component to handle mesh interactions
   const MeshInteractionHandler = () => {

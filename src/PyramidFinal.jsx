@@ -14,46 +14,65 @@ function PyramidFinal() {
   const [animationComplete, setAnimationComplete] = useState(false);
 
   const textPosition = useControls("Text Position", {
-    x: { value: 45.3, min: -80, max: 80, step: 0.1 },
-    y: { value: 8.1, min: -40, max: 40, step: 0.1 },
-    z: { value: 35.9, min: -80, max: 80, step: 0.1 },
+    x: { value: -64.1, min: -200, max: 200, step: 0.1 },
+    y: { value: 23.3, min: -40, max: 40, step: 0.1 },
+    z: { value: -77.4, min: -80, max: 80, step: 0.1 },
   });
 
   const textRotation = useControls("Text Rotation", {
     x: { value: 0.0, min: 0, max: Math.PI * 2, step: 0.01 },
-    y: { value: 0.80, min: 0, max: Math.PI * 2, step: 0.01 },
+    y: { value: 0.86, min: 0, max: Math.PI * 2, step: 0.01 },
     z: { value: 0.0, min: 0, max: Math.PI * 2, step: 0.01 },
   });
 
   // Leva controls for position
   const part1Pos = useControls('Part 1 Position', {
-    x: { value: 1.1, min: -10, max: 10, step: 0.1 },
+    x: { value: 0.9, min: -10, max: 10, step: 0.1 },
     y: { value: 1.0, min: -10, max: 10, step: 0.1 },
-    z: { value: -0.07, min: -10, max: 10, step: 0.1 },
+    z: { value: -0.4, min: -10, max: 10, step: 0.1 },
   });
 
   const part2Pos = useControls('Part 2 Position', {
     x: { value: 0.2, min: -10, max: 10, step: 0.1 },
     y: { value: 1.9, min: -10, max: 10, step: 0.1 },
-    z: { value: -0.2, min: -10, max: 10, step: 0.1 },
+    z: { value: -0.3, min: -10, max: 10, step: 0.1 },
   });
 
   const part3Pos = useControls('Part 3 Position', {
-    x: { value: -1.1, min: -10, max: 10, step: 0.1 },
-    y: { value: 0.4, min: -10, max: 10, step: 0.1 },
-    z: { value: -0.45, min: -10, max: 10, step: 0.1 },
+    x: { value: -0.9, min: -10, max: 10, step: 0.1 },
+    y: { value: 0.44, min: -10, max: 10, step: 0.1 },
+    z: { value: -0.4, min: -10, max: 10, step: 0.1 },
+  });
+
+  // NEW: Individual scale controls for each part
+  const part1Scale = useControls('Part 1 Scale', {
+    x: { value: 0.5, min: 0.1, max: 3, step: 0.1 },
+    y: { value: 0.7, min: 0.1, max: 3, step: 0.1 },
+    z: { value: 0.7, min: 0.1, max: 3, step: 0.1 },
+  });
+
+  const part2Scale = useControls('Part 2 Scale', {
+    x: { value: 0.4, min: 0.1, max: 3, step: 0.1 },
+    y: { value: 0.8, min: 0.1, max: 3, step: 0.1 },
+    z: { value: 1.0, min: 0.1, max: 3, step: 0.1 },
+  });
+
+  const part3Scale = useControls('Part 3 Scale', {
+    x: { value: 0.5, min: 0.1, max: 3, step: 0.1 },
+    y: { value: 1.0, min: 0.1, max: 3, step: 0.1 },
+    z: { value: 1.0, min: 0.1, max: 3, step: 0.1 },
   });
 
   const WholePos = useControls('whole', {
-    x: { value: 23.3, min: -50, max: 50, step: 0.1 },
-    y: { value: -3.0, min: -50, max: 50, step: 0.1 },
-    z: { value: 20.0, min: -50, max: 50, step: 0.1 },
+    x: { value: -5.6, min: -200, max: 200, step: 0.1 },
+    y: { value: -0.9, min: -200, max: 200, step: 0.1 },
+    z: { value: -83.6, min: -200, max: 200, step: 0.1 },
   });
 
   const wholeRot = useControls('WholeRot', {
-    x: { value: 0.0, min: 0, max: Math.PI * 2, step: 0.01 },
-    y: { value: 5.50, min: 0, max: Math.PI * 2, step: 0.01 },
-    z: { value: 0.0, min: 0, max: Math.PI * 2, step: 0.01 },
+    x: { value: 0.0, min: 0, max: Math.PI *10, step: 0.01 },
+    y: { value: 5.65, min: 0, max: Math.PI * 10, step: 0.01 },
+    z: { value: 0.0, min: 0, max: Math.PI * 10, step: 0.01 },
   });
 
   // Animation effect - runs once on mount
@@ -103,7 +122,7 @@ function PyramidFinal() {
     <>
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={1.5} />
-      <OrbitControls />
+      {/* <OrbitControls /> */}
       <group 
         ref={groupRef}
         position={[WholePos.x, WholePos.y, WholePos.z]} 
@@ -114,18 +133,21 @@ function PyramidFinal() {
           nodes={nodes}
           partName="Part2"
           position={part1Pos}
+          scale={[part1Scale.x, part1Scale.y, part1Scale.z]} 
           animationComplete={animationComplete}
         />
         <FloatingPart 
           nodes={nodes}
           partName="Part1"
           position={part2Pos}
+          scale={[part2Scale.x, part2Scale.y, part2Scale.z]}
           animationComplete={animationComplete}
         />
         <FloatingPart 
           nodes={nodes}
           partName="Part3"
           position={part3Pos}
+          scale={[part3Scale.x, part3Scale.y, part3Scale.z]}
           animationComplete={animationComplete}
         />
       </group>
